@@ -10,7 +10,7 @@ on:
     workflows:
       - CI
     branches:
-      - main
+      - develop
     types:
       - completed
 
