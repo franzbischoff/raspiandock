@@ -1,0 +1,37 @@
+---
+name: Stale
+
+# yamllint disable-line rule:truthy
+on:
+  schedule:
+    - cron: "0 4 * * 0"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: stale
+
+jobs:
+  stale:
+    name: 🧹 Clean up stale issues and PRs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v4
+        with:
+          repo-token: ${{ github.token }}
+          days-before-close: 15
+          days-before-stale: 60
+          remove-stale-when-updated: true
+          stale-issue-label: "stale"
+          stale-issue-message: >
+            This issue is stale because it has been open 60 days
+            with no activity. Remove stale label or comment or
+            this will be closed in 15 days.
+          stale-pr-label: "stale"
+          stale-pr-message: >
+            This PR is stale because it has been open 60 days
+            with no activity. Remove stale label or comment or
+            this will be closed in 15 days.
