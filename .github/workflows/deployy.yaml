@@ -3,7 +3,6 @@ name: Deploy
 
 # yamllint disable-line rule:truthy
 on:
-  push:
   release:
     types:
       - published
@@ -11,7 +10,7 @@ on:
     workflows:
       - CI
     branches:
-      - develop
+      - main
     types:
       - completed
 
@@ -21,12 +20,12 @@ concurrency:
 
 jobs:
   information:
-#    if: |
-#      github.event_name == 'release'
-#      || (
-#        github.event_name == 'workflow_run'
-#        && github.event.workflow_run.conclusion == 'success'
-#      )
+    if: |
+      github.event_name == 'release'
+      || (
+        github.event_name == 'workflow_run'
+        && github.event.workflow_run.conclusion == 'success'
+      )
     name: ℹ️ Gather add-on information
     runs-on: ubuntu-latest
     outputs:
@@ -73,8 +72,7 @@ jobs:
         uses: actions/cache@v2.1.6
         with:
           path: /tmp/.docker-cache
-          key:
-            docker-${{ github.ref }}-${{ matrix.architecture }}-${{ github.sha }}
+          key: docker-${{ github.ref }}-${{ matrix.architecture }}-${{ github.sha }}
           restore-keys: |
             docker-${{ github.ref }}-${{ matrix.architecture }}
       - name: 🏗 Set up QEMU
@@ -129,6 +127,26 @@ jobs:
             BUILD_DATE=${{ steps.flags.outputs.date }}
             BUILD_REF=${{ github.sha }}
             BUILD_REPOSITORY=${{ github.repository }}
+      - name: 🔏 Notarize
+        # yamllint disable rule:line-length
+        run: |
+          if vcn authenticate \
+            --output json \
+            "docker://ghcr.io/franzbischoff/raspiandock/${{ matrix.architecture }}:${{ needs.information.outputs.version }}" \
+            | jq \
+              --exit-status \
+              '.verification.status != 0';
+          then
+            vcn login
+            vcn notarize \
+              --public \
+              "docker://ghcr.io/franzbischoff/raspiandock/${{ matrix.architecture }}:${{ needs.information.outputs.version }}"
+          fi
+        env:
+          VCN_USER: ${{ secrets.VCN_USER }}
+          VCN_PASSWORD: ${{ secrets.VCN_PASSWORD }}
+          VCN_NOTARIZATION_PASSWORD: ${{ secrets.VCN_NOTARIZATION_PASSWORD }}
+          VCN_OTP_EMPTY: true
       - name: 🚀 Push
         # yamllint disable rule:line-length
         run: |
