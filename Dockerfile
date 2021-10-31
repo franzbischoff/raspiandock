@@ -1,8 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG BUILD_FROM=franzbischoff/raspiandock-base:latest
-
-FROM --platform=linux/armhf ${BUILD_FROM}
+FROM franzbischoff/raspiandock-base:v1.0
 
 ENV LANG C.UTF-8
 
@@ -31,7 +29,7 @@ LABEL \
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Base image doesn't have host keys
-RUN dpkg-reconfigure openssh-server && service ssh restart
+RUN dpkg-reconfigure openssh-server
 
 EXPOSE 22/tcp
 
@@ -39,4 +37,4 @@ WORKDIR /home/pi
 
 USER pi
 
-CMD /bin/bash
+CMD ["/bin/bash"]

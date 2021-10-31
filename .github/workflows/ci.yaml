@@ -76,7 +76,8 @@ jobs:
       - name: 🚀 Run Prettier
         uses: creyD/prettier_action@v3.3
         with:
-          prettier_options: --write **/*.{json,js,md,yaml}
+          prettier_options: --write **/*.{json,js,md}
+
         env:
           GITHUB_TOKEN: ${{ github.token }}
 
@@ -92,7 +93,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        architecture: [ armhf ]
+        architecture: [armhf]
     steps:
       - name: ⤵️ Check out code from GitHub
         uses: actions/checkout@v2.3.4
