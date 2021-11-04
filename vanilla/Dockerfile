@@ -3,6 +3,25 @@
 FROM franzbischoff/raspiandock-base:v1.0
 
 ENV LANG C.UTF-8
+ENV HOME /root
+ENV PATH /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV TERM xterm-256color
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /root
+
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  network-manager=1.14.6-2+deb10u1 \
+  && rm -rf /var/lib/apt/lists/*
+
+# curl -fsSL https://get.docker.com -o get-docker.sh
+
+COPY get-docker.sh /root/
+
+RUN chmod 755 get-docker.sh && ./get-docker.sh
 
 # Build arguments
 ARG BUILD_DATE="2021-06-27"
@@ -11,7 +30,7 @@ ARG BUILD_NAME="raspiandock-lite"
 ARG BUILD_REF="r0"
 ARG BUILD_REPOSITORY="franzbischoff/raspiandock"
 ARG BUILD_ARCH="armhf"
-ARG BUILD_VERSION="v0.9"
+ARG BUILD_VERSION="v1.0"
 
 # Labels
 LABEL \
@@ -26,15 +45,9 @@ LABEL \
   org.opencontainers.image.revision=${BUILD_REF} \
   org.opencontainers.image.version=${BUILD_VERSION}
 
-ARG DEBIAN_FRONTEND=noninteractive
-
-# Base image doesn't have host keys
-RUN dpkg-reconfigure openssh-server
-
 EXPOSE 22/tcp
 
-WORKDIR /home/pi
+COPY run.sh /
+RUN chmod 755 /run.sh
 
-USER pi
-
-CMD ["/bin/bash"]
+ENTRYPOINT "/run.sh"
